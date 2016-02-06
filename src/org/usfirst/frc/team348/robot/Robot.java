@@ -12,12 +12,13 @@ package org.usfirst.frc.team348.robot;
 /*
 
  * driveCimLF,driveCimLB,driveCimRF,driveCimRB > talonsrx > PID > drive motors
+ * shootCim > talonsrx > shooting motor talon
  * joystickL,joystickR > drive joysticks
  * box > breakout box
  * dashboard > smart dashboard
  * shiftSol,flailSol > double solenoids
  * shootSol > single solenoid
- *//test
+ */
 
 
 
@@ -31,7 +32,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Solenoid;
 
 public class Robot extends IterativeRobot {
-    CANTalon driveCimLF,driveCimLB,driveCimRF,driveCimRB;
+    CANTalon driveCimLF,driveCimLB,driveCimRF,driveCimRB,shootCim;
     Joystick joystickL,joystickR,box;
     SmartDashboard dashboard;
     DoubleSolenoid shiftSol,flailSol;
@@ -44,6 +45,7 @@ public class Robot extends IterativeRobot {
         driveCimLB= new CANTalon(4);
         driveCimRF= new CANTalon(3);
         driveCimRB= new CANTalon(1);
+        shootCim= new CANTalon(6);
         dashboard= new SmartDashboard();
         shiftSol= new DoubleSolenoid(0,1);
         flailSol= new DoubleSolenoid(2,3);
@@ -58,6 +60,7 @@ public class Robot extends IterativeRobot {
     }
 
     public void teleopPeriodic(){
+    	double shoot = (box.getZ()+1)/2;
     	driveCimLF.set(joystickL.getY());
     	driveCimLB.set(joystickL.getY());
     	driveCimRF.set(joystickR.getY());
@@ -80,6 +83,8 @@ public class Robot extends IterativeRobot {
         if(!box.getRawButton(8)){
         	shootSol.set(false);
         }
+        shootCim.set(shoot);
+        dashboard.putNumber("shoot power", shoot);
     }
 
     public void testPeriodic() {
