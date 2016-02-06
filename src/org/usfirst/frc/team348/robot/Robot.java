@@ -25,6 +25,8 @@ package org.usfirst.frc.team348.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
+import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
@@ -54,9 +56,36 @@ public class Robot extends IterativeRobot {
     }
  
     public void autonomousInit() {
+    	driveCimLF.changeControlMode(TalonControlMode.Speed);
+    	driveCimLB.changeControlMode(TalonControlMode.Follower);
+    	driveCimRF.changeControlMode(TalonControlMode.Speed);
+    	driveCimRB.changeControlMode(TalonControlMode.Follower);
+    	driveCimLF.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+    	driveCimLF.reverseSensor(false);
+    	driveCimLF.setProfile(0);
+    	driveCimLF.setF(0.1097);
+    	driveCimLF.setP(0.22);
+    	driveCimLF.setI(0);
+    	driveCimLF.setD(0);
+    	driveCimRF.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+    	driveCimRF.reverseSensor(false);
+    	driveCimRF.setProfile(0);
+    	driveCimRF.setF(0.1097);
+    	driveCimRF.setP(0.22);
+    	driveCimRF.setI(0);
+    	driveCimRF.setD(0);
+    	driveCimRB.set(3);
+    	driveCimLB.set(2);
     }
-
+    public void teleopInit() {
+    	driveCimLF.changeControlMode(TalonControlMode.PercentVbus);
+    	driveCimLB.changeControlMode(TalonControlMode.PercentVbus);
+    	driveCimRF.changeControlMode(TalonControlMode.PercentVbus);
+    	driveCimRB.changeControlMode(TalonControlMode.PercentVbus);
+    	shootCim.changeControlMode(TalonControlMode.PercentVbus);
+    }
     public void autonomousPeriodic() {
+    
     }
 
     public void teleopPeriodic(){
