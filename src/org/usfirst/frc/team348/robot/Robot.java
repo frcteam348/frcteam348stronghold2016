@@ -85,7 +85,8 @@ public class Robot extends IterativeRobot {
     	shootCim.changeControlMode(TalonControlMode.PercentVbus);
     }
     public void autonomousPeriodic() {
-    
+    	dashboard.putNumber("left motor error", driveCimLF.getError());
+    	dashboard.putNumber("right motor error", driveCimRF.getError());
     }
 
     public void teleopPeriodic(){
