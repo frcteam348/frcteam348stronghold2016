@@ -43,10 +43,10 @@ public class Robot extends IterativeRobot {
     public void robotInit() {
     	joystickL= new Joystick(2);
     	joystickR= new Joystick(1);
-        driveCimLF= new CANTalon(2);
-        driveCimLB= new CANTalon(4);
-        driveCimRF= new CANTalon(3);
-        driveCimRB= new CANTalon(1);
+        driveCimLF= new CANTalon(1);
+        driveCimLB= new CANTalon(3);
+        driveCimRF= new CANTalon(2);
+        driveCimRB= new CANTalon(4);
         shootCim= new CANTalon(6);
         dashboard= new SmartDashboard();
         shiftSol= new DoubleSolenoid(0,1);
@@ -122,3 +122,4 @@ public class Robot extends IterativeRobot {
     }
     
 }
+ 
