@@ -98,15 +98,30 @@ public class Robot extends IterativeRobot {
 
     public void teleopPeriodic(){
     	double shoot = ((box.getZ()+1)/2)*16.7;
-    	driveCimLF.set(joystickL.getY());
-    	driveCimLB.set(joystickL.getY());
-    	driveCimRF.set(joystickR.getY());
-    	driveCimRB.set(joystickR.getY());
         if(box.getRawButton(5)){
         	shiftSol.set(Value.kForward);
+        	driveCimLF.set(joystickL.getY());
+        	driveCimLB.set(joystickL.getY());
+        	driveCimRF.set(joystickR.getY());
+        	driveCimRB.set(joystickR.getY());
         }
         if(!box.getRawButton(5)){
+        	double shiftLimit = 0.75;
+        	double shiftRisk = Math.abs(joystickL.getY()-joystickR.getY());
+        	dashboard.putNumber("shift risk", shiftRisk);
         	shiftSol.set(Value.kReverse);
+        	if(shiftRisk>=0.75){
+        		driveCimLF.set(joystickL.getY()*shiftLimit);
+        		driveCimLB.set(joystickL.getY()*shiftLimit);
+        		driveCimRF.set(joystickR.getY()*shiftLimit);
+        		driveCimRB.set(joystickR.getY()*shiftLimit);
+        	}
+        	else{
+        		driveCimLF.set(joystickL.getY());
+            	driveCimLB.set(joystickL.getY());
+            	driveCimRF.set(joystickR.getY());
+            	driveCimRB.set(joystickR.getY());	
+        	}
         }
         if(box.getRawButton(7)){
         	flailSol.set(Value.kForward);
