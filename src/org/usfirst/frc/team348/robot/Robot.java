@@ -4,7 +4,7 @@ package org.usfirst.frc.team348.robot;
 //to do
 // 1. update the how to document
 // 2. add the variable map to this document at the top with remark statements
-// 3. 
+// 3. talonSR
 // 4. 
 
 //***************************************************************************************************//
@@ -12,6 +12,7 @@ package org.usfirst.frc.team348.robot;
 /*
 
  * driveCimLF,driveCimLB,driveCimRF,driveCimRB > talonsrx > PID > drive motors
+ * flailBag > talonSR > PWM > flail motor
  * shootCim > talonsrx > shooting motor talon
  * joystickL,joystickR > drive joysticks
  * box > breakout box
@@ -32,9 +33,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends IterativeRobot {
     CANTalon driveCimLF,driveCimLB,driveCimRF,driveCimRB,shootCim;
+    Talon flailBag;
     Joystick joystickL,joystickR,box;
     SmartDashboard dashboard;
     DoubleSolenoid shiftSol,flailSol;
@@ -47,6 +50,7 @@ public class Robot extends IterativeRobot {
         driveCimLB= new CANTalon(3);
         driveCimRF= new CANTalon(2);
         driveCimRB= new CANTalon(4);
+        flailBag = new Talon(0);
         shootCim= new CANTalon(6);
         dashboard= new SmartDashboard();
         shiftSol= new DoubleSolenoid(0,1);
@@ -130,10 +134,16 @@ public class Robot extends IterativeRobot {
         	flailSol.set(Value.kReverse);
         }
         if(box.getRawButton(8)){
-        	shootSol.set(true);
+        	shootSol.set(true);  
         }
         if(!box.getRawButton(8)){
         	shootSol.set(false);
+        }
+        if(joystickR.getRawButton(1)){
+        	flailBag.set(1);
+        }
+        if(!joystickR.getRawButton(1)){
+        	flailBag.set(0);
         }
         shootCim.set(shoot);
         dashboard.putNumber("shoot speed", shoot);
