@@ -82,7 +82,14 @@ public class Robot extends IterativeRobot {
     	driveCimLB.changeControlMode(TalonControlMode.PercentVbus);
     	driveCimRF.changeControlMode(TalonControlMode.PercentVbus);
     	driveCimRB.changeControlMode(TalonControlMode.PercentVbus);
-    	shootCim.changeControlMode(TalonControlMode.PercentVbus);
+    	shootCim.changeControlMode(TalonControlMode.Speed);
+    	shootCim.setFeedbackDevice(FeedbackDevice.EncRising);
+    	shootCim.reverseSensor(false);
+    	shootCim.setProfile(0);
+    	shootCim.setF(0.1097);
+    	shootCim.setP(0.22);
+    	shootCim.setI(0);
+    	shootCim.setD(0);
     }
     public void autonomousPeriodic() {
     	dashboard.putNumber("left motor error", driveCimLF.getError());
@@ -90,7 +97,7 @@ public class Robot extends IterativeRobot {
     }
 
     public void teleopPeriodic(){
-    	double shoot = (box.getZ()+1)/2;
+    	double shoot = ((box.getZ()+1)/2)*16.7;
     	driveCimLF.set(joystickL.getY());
     	driveCimLB.set(joystickL.getY());
     	driveCimRF.set(joystickR.getY());
@@ -114,7 +121,8 @@ public class Robot extends IterativeRobot {
         	shootSol.set(false);
         }
         shootCim.set(shoot);
-        dashboard.putNumber("shoot power", shoot);
+        dashboard.putNumber("shoot speed", shoot);
+        dashboard.putNumber("shoot speed error", shootCim.getError());
     }
 
     public void testPeriodic() {
