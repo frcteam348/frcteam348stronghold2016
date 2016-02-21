@@ -36,78 +36,75 @@ import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends IterativeRobot {
-    CANTalon driveCimLF,driveCimLB,driveCimRF,driveCimRB,shootCim;
+    CANTalon driveCimLF,driveCimLB,driveCimRF,driveCimRB,shootCim,aimCim;
     Talon flailBag;
     Joystick joystickL,joystickR,box;
     SmartDashboard dashboard;
     DoubleSolenoid shiftSol,flailSol;
     Solenoid shootSol;
+
     
     public void robotInit() {
     	joystickL= new Joystick(2);
     	joystickR= new Joystick(1);
-        driveCimLF= new CANTalon(1);
+        driveCimLF= new CANTalon(5);
         driveCimLB= new CANTalon(3);
         driveCimRF= new CANTalon(2);
         driveCimRB= new CANTalon(4);
-        flailBag = new Talon(0);
+        aimCim = new CANTalon(1);
         shootCim= new CANTalon(6);
+        flailBag = new Talon(0);
         dashboard= new SmartDashboard();
         shiftSol= new DoubleSolenoid(0,1);
-        flailSol= new DoubleSolenoid(2,3);
+        flailSol= new DoubleSolenoid(3,2);
         shootSol= new Solenoid(4);
-        box= new Joystick(0);
+        box= new Joystick(0);   
     }
  
     public void autonomousInit() {
-    	driveCimLF.changeControlMode(TalonControlMode.Speed);
-    	driveCimLB.changeControlMode(TalonControlMode.Follower);
-    	driveCimRF.changeControlMode(TalonControlMode.Speed);
-    	driveCimRB.changeControlMode(TalonControlMode.Follower);
-    	driveCimLF.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-    	driveCimLF.reverseSensor(false);
-    	driveCimLF.setProfile(0);
-    	driveCimLF.setF(0.1097);
-    	driveCimLF.setP(0.22);
-    	driveCimLF.setI(0);
-    	driveCimLF.setD(0);
-    	driveCimRF.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-    	driveCimRF.reverseSensor(false);
-    	driveCimRF.setProfile(0);
-    	driveCimRF.setF(0.1097);
-    	driveCimRF.setP(0.22);
-    	driveCimRF.setI(0);
-    	driveCimRF.setD(0);
-    	driveCimRB.set(3);
-    	driveCimLB.set(2);
     }
     public void teleopInit() {
-    	driveCimLF.changeControlMode(TalonControlMode.PercentVbus);
-    	driveCimLB.changeControlMode(TalonControlMode.PercentVbus);
-    	driveCimRF.changeControlMode(TalonControlMode.PercentVbus);
-    	driveCimRB.changeControlMode(TalonControlMode.PercentVbus);
-    	shootCim.changeControlMode(TalonControlMode.Speed);
-    	shootCim.setFeedbackDevice(FeedbackDevice.EncRising);
-    	shootCim.reverseSensor(false);
-    	shootCim.setProfile(0);
-    	shootCim.setF(0.1097);
-    	shootCim.setP(0.22);
-    	shootCim.setI(0);
-    	shootCim.setD(0);
+    	shootCim.changeControlMode(TalonControlMode.Voltage);
+    	int absolutePosition = aimCim.getPulseWidthPosition() & 0xFFF;
+    	aimCim.setEncPosition(absolutePosition);
+    	aimCim.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Absolute);
+    	aimCim.changeControlMode(TalonControlMode.Position);
+    	aimCim.reverseSensor(false);
+    	aimCim.setAllowableClosedLoopErr(0);
+    	aimCim.setProfile(0);
+    	aimCim.setF(0.0);
+    	aimCim.setP(0.0);
+    	aimCim.setI(0.0); 
+    	aimCim.setD(0.0);  
     }
     public void autonomousPeriodic() {
-    	dashboard.putNumber("left motor error", driveCimLF.getError());
-    	dashboard.putNumber("right motor error", driveCimRF.getError());
     }
 
     public void teleopPeriodic(){
-    	double shoot = ((box.getZ()+1)/2)*16.7;
+    	double shoot = ((box.getZ()+1)/2)*12.0;
+    	
+    	double leftCmd = joystickL.getY();
+    	double rightCmd = joystickR.getY();
+    	
+    	// this measure is 0 when we are fully symmetric and 1 when we are fully antisymmetric
+    	double antisymmetryMeasure = Math.abs(leftCmd - rightCmd) / 2;
+    	
+    	double antisymmetryLimit = 0.7;
+    	double commandLimitDuringAntisymmetry = 0.6; // this is the fastest you can tell the motors to run while we judge that commands are antisymmetric
+    	if(antisymmetryMeasure > antisymmetryLimit) {
+    		leftCmd = Math.signum(leftCmd) * Math.min(commandLimitDuringAntisymmetry, Math.abs(leftCmd));
+    		rightCmd = Math.signum(rightCmd) * Math.min(commandLimitDuringAntisymmetry, Math.abs(rightCmd));
+    	}
+    	
+    	// the right motors are reversed
+    	rightCmd *= -1;
+    	
         if(box.getRawButton(5)){
         	shiftSol.set(Value.kForward);
-        	driveCimLF.set(joystickL.getY());
-        	driveCimLB.set(joystickL.getY());
-        	driveCimRF.set(joystickR.getY());
-        	driveCimRB.set(joystickR.getY());
+        	driveCimLF.set(leftCmd);
+        	driveCimLB.set(leftCmd);
+        	driveCimRF.set(rightCmd);
+        	driveCimRB.set(rightCmd);
         }
         if(!box.getRawButton(5)){
         	double shiftLimit = 0.75;
@@ -115,16 +112,16 @@ public class Robot extends IterativeRobot {
         	dashboard.putNumber("shift risk", shiftRisk);
         	shiftSol.set(Value.kReverse);
         	if(shiftRisk>=0.75){
-        		driveCimLF.set(joystickL.getY()*shiftLimit);
-        		driveCimLB.set(joystickL.getY()*shiftLimit);
-        		driveCimRF.set(joystickR.getY()*shiftLimit);
-        		driveCimRB.set(joystickR.getY()*shiftLimit);
+        		driveCimLF.set(leftCmd*shiftLimit);
+        		driveCimLB.set(leftCmd*shiftLimit);
+        		driveCimRF.set(rightCmd*shiftLimit);
+        		driveCimRB.set(rightCmd*shiftLimit);
         	}
         	else{
-        		driveCimLF.set(joystickL.getY());
-            	driveCimLB.set(joystickL.getY());
-            	driveCimRF.set(joystickR.getY());
-            	driveCimRB.set(joystickR.getY());	
+        		driveCimLF.set(leftCmd);
+            	driveCimLB.set(leftCmd);
+            	driveCimRF.set(rightCmd);
+            	driveCimRB.set(rightCmd);	
         	}
         }
         if(box.getRawButton(7)){
@@ -144,15 +141,26 @@ public class Robot extends IterativeRobot {
         }
         if(!joystickR.getRawButton(1)){
         	flailBag.set(0);
-        }
-        shootCim.set(shoot);
+         }
+        shootCim.set(0);
+        aimCim.set(0.500);
         dashboard.putNumber("shoot speed", shoot);
-        dashboard.putNumber("shoot speed error", shootCim.getError());
-    }
+        dashboard.putNumber("aim P", aimCim.getP());
+        dashboard.putNumber("aim I", aimCim.getI());
+        dashboard.putNumber("aim D", aimCim.getD());
+        dashboard.putNumber("aim error", aimCim.getClosedLoopError());
+        dashboard.putNumber("aim position", aimCim.getPosition());
+        dashboard.putNumber("shooty", shootCim.get());
+        dashboard.putNumber("left joystick y", leftCmd);
+        dashboard.putNumber("right joystick y", rightCmd);
+        dashboard.putNumber("antisymmetryMeasure", antisymmetryMeasure);
+        
 
+    }
+ 
     public void testPeriodic() {
     
     }
     
-}
+} 
  
