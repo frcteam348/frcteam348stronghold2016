@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -42,6 +43,7 @@ public class Robot extends IterativeRobot {
     SmartDashboard dashboard;
     DoubleSolenoid shiftSol,flailSol;
     Solenoid shootSol;
+    Preferences prefs;
  
     
     public void robotInit() {
@@ -58,7 +60,8 @@ public class Robot extends IterativeRobot {
         shiftSol  = new DoubleSolenoid(0,1);
         flailSol  = new DoubleSolenoid(3,2);
         shootSol  = new Solenoid(4);
-        box       = new Joystick(0);   
+        box       = new Joystick(0);
+        prefs     = Preferences.getInstance();
     }
  
     public void autonomousInit() {
@@ -69,12 +72,12 @@ public class Robot extends IterativeRobot {
     	int absolutePosition = aimCim.getPulseWidthPosition() & 0xFFF;  	
     	aimCim.setEncPosition(absolutePosition);
     	aimCim.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Absolute);
-    	aimCim.changeControlMode(TalonControlMode.PercentVbus);
+    	aimCim.changeControlMode(TalonControlMode.Position);
     	aimCim.reverseSensor(false);
-    	//aimCim.setAllowableClosedLoopErr(0);
-    	//aimCim.setProfile(0);
-    	//aimCim.setP(0.0);
-    	//aimCim.setI(0.0); 
+    	aimCim.setAllowableClosedLoopErr(0);
+    	aimCim.setProfile(0);
+    	//aimCim.setP(1.5);
+    	//aimCim.setI(0); 
     	//aimCim.setD(0.0);  
     }
     
@@ -88,10 +91,15 @@ public class Robot extends IterativeRobot {
     
     
     public void teleopPeriodic(){
+    	
+    	aimCim.setP(prefs.getDouble("AimP", 1.5));
+    	aimCim.setI(prefs.getDouble("AimI", 0));
+    	
     	double shoot = ((box.getZ()+1)/2)*12.0;
     	double shoot2 = -(box.getZ());
     	double leftCmd = joystickL.getY();
     	double rightCmd = joystickR.getY();
+    	
     	
     	
     	
@@ -147,7 +155,7 @@ public class Robot extends IterativeRobot {
         	flailBag.set(0);
         	shootCim.set(-11);
         }
-        if(joystickL.getRawButton(1) && (!joystickR.getRawButton(1)) && box.getRawButton(8)){
+        if(joystickL.getRawButton(1) && !joystickR.getRawButton(1) && box.getRawButton(8)){
         	shootSol.set(true);
         }
         if(!joystickR.getRawButton(1)&&!joystickL.getRawButton(1)){
@@ -158,17 +166,22 @@ public class Robot extends IterativeRobot {
         }
         
         
+        double down = prefs.getDouble("AimPos_Down", 0.291);
+        double start = prefs.getDouble("AimPos_Start", 0.572);
         
+        double point = down + ((shoot2+1)/2) * (start - down);
         
         
         //shootCim.set(0);
-        aimCim.set(shoot2);
+        //aimCim.set(shoot2);
+        aimCim.set(point);
         dashboard.putNumber("shoot speed", shoot);
-        //dashboard.putNumber("aim P", aimCim.getP());
-        //dashboard.putNumber("aim I", aimCim.getI());
-        //dashboard.putNumber("aim D", aimCim.getD());
-        //dashboard.putNumber("aim error", aimCim.getError());
+        dashboard.putNumber("aim P", aimCim.getP());
+        dashboard.putNumber("aim I", aimCim.getI());
+        dashboard.putNumber("aim D", aimCim.getD());
+        dashboard.putNumber("aim error", aimCim.getError());
         dashboard.putNumber("aim position", aimCim.getPosition());
+        dashboard.putNumber("aim target point", aimCim.getSetpoint());
         dashboard.putNumber("shooty", shootCim.get());
         dashboard.putNumber("left joystick y", leftCmd);
         dashboard.putNumber("right joystick y", rightCmd);
