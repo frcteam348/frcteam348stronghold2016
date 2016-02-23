@@ -42,7 +42,7 @@ public class Robot extends IterativeRobot {
     SmartDashboard dashboard;
     DoubleSolenoid shiftSol,flailSol;
     Solenoid shootSol;
-
+ 
     
     public void robotInit() {
     	joystickL = new Joystick(2);
@@ -69,13 +69,13 @@ public class Robot extends IterativeRobot {
     	int absolutePosition = aimCim.getPulseWidthPosition() & 0xFFF;  	
     	aimCim.setEncPosition(absolutePosition);
     	aimCim.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Absolute);
-    	aimCim.changeControlMode(TalonControlMode.Position);
+    	aimCim.changeControlMode(TalonControlMode.PercentVbus);
     	aimCim.reverseSensor(false);
-    	aimCim.setAllowableClosedLoopErr(0);
-    	aimCim.setProfile(0);
-    	aimCim.setP(0.0);
-    	aimCim.setI(0.0); 
-    	aimCim.setD(0.0);  
+    	//aimCim.setAllowableClosedLoopErr(0);
+    	//aimCim.setProfile(0);
+    	//aimCim.setP(0.0);
+    	//aimCim.setI(0.0); 
+    	//aimCim.setD(0.0);  
     }
     
     
@@ -89,7 +89,7 @@ public class Robot extends IterativeRobot {
     
     public void teleopPeriodic(){
     	double shoot = ((box.getZ()+1)/2)*12.0;
-    	double shoot2 = box.getZ();
+    	double shoot2 = -(box.getZ());
     	double leftCmd = joystickL.getY();
     	double rightCmd = joystickR.getY();
     	
@@ -124,7 +124,7 @@ public class Robot extends IterativeRobot {
             	driveCimRF.set(rightCmd);
             	driveCimRB.set(rightCmd);	
         }
-        if(box.getRawButton(7)){
+        /*if(box.getRawButton(7)){
         	flailSol.set(Value.kForward);
         }
         if(!box.getRawButton(7)){
@@ -135,17 +135,27 @@ public class Robot extends IterativeRobot {
         }
         if(!box.getRawButton(8)){
         	shootSol.set(false);
-        }
-        if(joystickR.getRawButton(1)){
+        }*/
+        if(joystickR.getRawButton(1)&&!joystickL.getRawButton(1)){
+        	flailSol.set(Value.kReverse);
         	flailBag.set(-.5);
         	shootCim.set(4);
+        	shootSol.set(false);
         }
-        if(!joystickR.getRawButton(1)){
+        if(joystickL.getRawButton(1)&&!joystickR.getRawButton(1)){
+        	flailSol.set(Value.kForward);
+        	flailBag.set(0);
+        	shootCim.set(-11);
+        }
+        if(joystickL.getRawButton(1) && (!joystickR.getRawButton(1)) && box.getRawButton(8)){
+        	shootSol.set(true);
+        }
+        if(!joystickR.getRawButton(1)&&!joystickL.getRawButton(1)){
+        	flailSol.set(Value.kOff);
         	flailBag.set(0);
         	shootCim.set(0);
-         }
-        
-        
+        	shootSol.set(false);
+        }
         
         
         
@@ -154,11 +164,11 @@ public class Robot extends IterativeRobot {
         //shootCim.set(0);
         aimCim.set(shoot2);
         dashboard.putNumber("shoot speed", shoot);
-        dashboard.putNumber("aim P", aimCim.getP());
-        dashboard.putNumber("aim I", aimCim.getI());
-        dashboard.putNumber("aim D", aimCim.getD());
-        dashboard.putNumber("aim error", aimCim.getError());
-        dashboard.putNumber("aim position", aimCim.get());
+        //dashboard.putNumber("aim P", aimCim.getP());
+        //dashboard.putNumber("aim I", aimCim.getI());
+        //dashboard.putNumber("aim D", aimCim.getD());
+        //dashboard.putNumber("aim error", aimCim.getError());
+        dashboard.putNumber("aim position", aimCim.getPosition());
         dashboard.putNumber("shooty", shootCim.get());
         dashboard.putNumber("left joystick y", leftCmd);
         dashboard.putNumber("right joystick y", rightCmd);
