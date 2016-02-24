@@ -19,6 +19,10 @@ package org.usfirst.frc.team348.robot;
  * dashboard > smart dashboard
  * shiftSol,flailSol > double solenoids
  * shootSol > single solenoid
+ * 
+ * meth causes mass genocide
+ * Ward is savage
+ * Magno did nothing
  */
 
 
@@ -132,34 +136,23 @@ public class Robot extends IterativeRobot {
             	driveCimRF.set(rightCmd);
             	driveCimRB.set(rightCmd);	
         }
-        /*if(box.getRawButton(7)){
-        	flailSol.set(Value.kForward);
-        }
-        if(!box.getRawButton(7)){
-        	flailSol.set(Value.kReverse);
-        }
-        if(box.getRawButton(8)){
-        	shootSol.set(true);  
-        }
-        if(!box.getRawButton(8)){
-        	shootSol.set(false);
-        }*/
-        if(joystickR.getRawButton(1)&&!joystickL.getRawButton(1)){
+     
+        if(joystickR.getRawButton(2)&&!joystickL.getRawButton(1)){
         	flailSol.set(Value.kReverse);
         	flailBag.set(-.5);
         	shootCim.set(4);
         	shootSol.set(false);
         }
-        if(joystickL.getRawButton(1)&&!joystickR.getRawButton(1)){
+        if(joystickL.getRawButton(1)&&!joystickR.getRawButton(2)){
         	flailSol.set(Value.kForward);
         	flailBag.set(0);
         	shootCim.set(-11);
         }
-        if(joystickL.getRawButton(1) && !joystickR.getRawButton(1) && box.getRawButton(8)){
+        if(joystickL.getRawButton(1) && !joystickR.getRawButton(2) && box.getRawButton(8)){
         	shootSol.set(true);
         }
-        if(!joystickR.getRawButton(1)&&!joystickL.getRawButton(1)){
-        	flailSol.set(Value.kOff);
+        if(!joystickR.getRawButton(2)&&!joystickL.getRawButton(1)){
+        	flailSol.set(Value.kReverse);
         	flailBag.set(0);
         	shootCim.set(0);
         	shootSol.set(false);
