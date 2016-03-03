@@ -39,6 +39,8 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.Timer;
+
 
 public class Robot extends IterativeRobot {
     CANTalon driveCimLF,driveCimLB,driveCimRF,driveCimRB,shootCim,aimCim;
@@ -48,6 +50,8 @@ public class Robot extends IterativeRobot {
     DoubleSolenoid shiftSol,flailSol;
     Solenoid shootSol;
     Preferences prefs;
+    Timer spoolTime;
+    int spoolStage;
  
     
     public void robotInit() {
@@ -66,17 +70,20 @@ public class Robot extends IterativeRobot {
         shootSol  = new Solenoid(4);
         box       = new Joystick(0);
         prefs     = Preferences.getInstance();
+        spoolTime = new Timer();
     }
  
     public void autonomousInit() {
     }
     public void teleopInit() {
     	shootCim.changeControlMode(TalonControlMode.Voltage);
-    	
-    	int absolutePosition = aimCim.getPulseWidthPosition() & 0xFFF;  	
-    	aimCim.setEncPosition(absolutePosition);
-    	aimCim.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Absolute);
-    	aimCim.changeControlMode(TalonControlMode.Position);
+    	spoolStage = 0;	
+    	//int absolutePosition = aimCim.getPulseWidthPosition() & 0xFFF;  
+    	//aimCim.setEncPosition(absolutePosition);
+    	//aimCim.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Absolute);
+    	aimCim.setFeedbackDevice(FeedbackDevice.AnalogPot);
+    	aimCim.changeControlMode(TalonControlMode.PercentVbus);
+    	//aimCim.changeControlMode(TalonControlMode.Position);
     	aimCim.reverseSensor(false);
     	aimCim.setAllowableClosedLoopErr(0);
     	aimCim.setProfile(0);
@@ -130,50 +137,57 @@ public class Robot extends IterativeRobot {
         	driveCimRB.set(rightCmd);
         }
         if(!box.getRawButton(5)){
-        	shiftSol.set(Value.kReverse);
+        		shiftSol.set(Value.kReverse);
         		driveCimLF.set(leftCmd);
             	driveCimLB.set(leftCmd);
             	driveCimRF.set(rightCmd);
             	driveCimRB.set(rightCmd);	
         }
      
-        if(joystickR.getRawButton(2)&&!joystickL.getRawButton(1)){
+        if(joystickR.getRawButton(2)&&!joystickR.getRawButton(1)){
         	flailSol.set(Value.kReverse);
         	flailBag.set(-.5);
         	shootCim.set(4);
         	shootSol.set(false);
         }
-        if(joystickL.getRawButton(1)&&!joystickR.getRawButton(2)){
+        if(joystickR.getRawButton(1)&&!joystickR.getRawButton(2)&&spoolStage==0){
+        	spoolTime.stop();
+        	spoolTime.reset();
+        	spoolTime.start();
+        	spoolStage=1;
+        }
+        if(joystickR.getRawButton(1)&&!joystickR.getRawButton(2)&&spoolStage==1){
         	flailSol.set(Value.kForward);
         	flailBag.set(0);
         	shootCim.set(-11);
+        	if(spoolTime.get()>=0.5){
+        		shootSol.set(true);
+        	}
         }
-        if(joystickL.getRawButton(1) && !joystickR.getRawButton(2) && box.getRawButton(8)){
-        	shootSol.set(true);
-        }
-        if(!joystickR.getRawButton(2)&&!joystickL.getRawButton(1)){
-        	flailSol.set(Value.kReverse);
+        if(!joystickR.getRawButton(2)&&!joystickR.getRawButton(1)){
+			flailSol.set(Value.kReverse);
         	flailBag.set(0);
         	shootCim.set(0);
         	shootSol.set(false);
+        	spoolStage=0;
         }
         
         
-        double down = prefs.getDouble("AimPos_Down", 0.291);
-        double start = prefs.getDouble("AimPos_Start", 0.572);
+        double down = prefs.getDouble("AimPos_Down", -1.345);
+        double start = prefs.getDouble("AimPos_Start", -1.098);
         
         double point = down + ((shoot2+1)/2) * (start - down);
         
         
         //shootCim.set(0);
-        //aimCim.set(shoot2);
-        aimCim.set(point);
+        aimCim.set(shoot2 * 0.7);
+        //aimCim.set(point);
         dashboard.putNumber("shoot speed", shoot);
         dashboard.putNumber("aim P", aimCim.getP());
         dashboard.putNumber("aim I", aimCim.getI());
         dashboard.putNumber("aim D", aimCim.getD());
         dashboard.putNumber("aim error", aimCim.getError());
-        dashboard.putNumber("aim position", aimCim.getPosition());
+        dashboard.putNumber("aim position", aimCim.getPosition()); 
         dashboard.putNumber("aim target point", aimCim.getSetpoint());
         dashboard.putNumber("shooty", shootCim.get());
         dashboard.putNumber("left joystick y", leftCmd);
