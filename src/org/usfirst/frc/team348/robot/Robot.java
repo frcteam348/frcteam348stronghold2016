@@ -77,8 +77,8 @@ public class Robot extends IterativeRobot {
     }
     public void teleopInit() {
     	shootCim.changeControlMode(TalonControlMode.Voltage);
-    	spoolStage = 0;	
-    	//int absolutePosition = aimCim.getPulseWidthPosition() & 0xFFF;  
+    	spoolStage = 0;
+    	//int absolutePosition = aimCim.getPulseWidthPosition() & 0xFFF;
     	//aimCim.setEncPosition(absolutePosition);
     	//aimCim.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Absolute);
     	aimCim.setFeedbackDevice(FeedbackDevice.AnalogPot);
@@ -88,8 +88,8 @@ public class Robot extends IterativeRobot {
     	aimCim.setAllowableClosedLoopErr(0);
     	aimCim.setProfile(0);
     	//aimCim.setP(1.5);
-    	//aimCim.setI(0); 
-    	//aimCim.setD(0.0);  
+    	//aimCim.setI(0);
+    	//aimCim.setD(0.0);
     }
     
     
@@ -145,7 +145,7 @@ public class Robot extends IterativeRobot {
         }
      
         if(joystickR.getRawButton(2)&&!joystickR.getRawButton(1)){
-        	flailSol.set(Value.kReverse);
+        	//flailSol.set(Value.kReverse);
         	flailBag.set(-.5);
         	shootCim.set(4);
         	shootSol.set(false);
@@ -157,7 +157,7 @@ public class Robot extends IterativeRobot {
         	spoolStage=1;
         }
         if(joystickR.getRawButton(1)&&!joystickR.getRawButton(2)&&spoolStage==1){
-        	flailSol.set(Value.kForward);
+        	//flailSol.set(Value.kForward);
         	flailBag.set(0);
         	shootCim.set(-11);
         	if(spoolTime.get()>=0.5){
@@ -165,13 +165,18 @@ public class Robot extends IterativeRobot {
         	}
         }
         if(!joystickR.getRawButton(2)&&!joystickR.getRawButton(1)){
-			flailSol.set(Value.kReverse);
+			//flailSol.set(Value.kReverse);
         	flailBag.set(0);
         	shootCim.set(0);
         	shootSol.set(false);
         	spoolStage=0;
         }
-        
+        if(box.getRawButton(7)){
+        	flailSol.set(Value.kForward);
+        }
+        if(!box.getRawButton(7)){
+        	flailSol.set(Value.kReverse);
+        }
         
         double down = prefs.getDouble("AimPos_Down", -1.345);
         double start = prefs.getDouble("AimPos_Start", -1.098);
