@@ -82,8 +82,8 @@ public class Robot extends IterativeRobot {
     	//aimCim.setEncPosition(absolutePosition);
     	//aimCim.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Absolute);
     	aimCim.setFeedbackDevice(FeedbackDevice.AnalogPot);
-    	aimCim.changeControlMode(TalonControlMode.PercentVbus);
-    	//aimCim.changeControlMode(TalonControlMode.Position);
+    	//aimCim.changeControlMode(TalonControlMode.PercentVbus);
+    	aimCim.changeControlMode(TalonControlMode.Position);
     	aimCim.reverseSensor(false);
     	aimCim.setAllowableClosedLoopErr(0);
     	aimCim.setProfile(0);
@@ -129,6 +129,13 @@ public class Robot extends IterativeRobot {
     	// the right motors are reversed
     	rightCmd *= -1;
     	
+    	double aimPos_Down  = prefs.getDouble("AimPos_Down",  445);
+    	double aimPos_Drive = prefs.getDouble("AimPos_Drive", 425);
+    	double aimPos_Shoot = prefs.getDouble("AimPos_Shoot", 308);
+    	double aimPos_Start = prefs.getDouble("AimPos_Start", 298);
+    	
+    	double aimPoint = aimPos_Drive;
+    	
         if(box.getRawButton(5)){
         	shiftSol.set(Value.kForward);
         	driveCimLF.set(leftCmd);
@@ -144,40 +151,58 @@ public class Robot extends IterativeRobot {
             	driveCimRB.set(rightCmd);	
         }
      
-        if(joystickR.getRawButton(2)&&!joystickR.getRawButton(1)){
-        	//flailSol.set(Value.kReverse);
+        if(joystickR.getRawButton(2)&&!joystickR.getRawButton(1)&&spoolStage!=3){
+        	// commanded to pickup balls
+        	flailSol.set(Value.kReverse);
         	flailBag.set(-.5);
-        	shootCim.set(4);
+        	shootCim.set(5.5);
         	shootSol.set(false);
+        	aimPoint = aimPos_Down;
         }
-        if(joystickR.getRawButton(1)&&!joystickR.getRawButton(2)&&spoolStage==0){
+        if(joystickR.getRawButton(1)&&!joystickR.getRawButton(2)&&spoolStage==0&&spoolStage!=3){
+        	// commanded to shoot, spool up for shooting
         	spoolTime.stop();
         	spoolTime.reset();
         	spoolTime.start();
         	spoolStage=1;
+        	aimPoint = aimPos_Shoot;
         }
-        if(joystickR.getRawButton(1)&&!joystickR.getRawButton(2)&&spoolStage==1){
-        	//flailSol.set(Value.kForward);
+        if(joystickR.getRawButton(1)&&!joystickR.getRawButton(2)&&spoolStage==1&&spoolStage!=3){
+        	// commanded to shoot, waiting for spoolup to complete
+        	flailSol.set(Value.kForward);
         	flailBag.set(0);
-        	shootCim.set(-11);
-        	if(spoolTime.get()>=0.5){
+        	shootCim.set(-12);
+        	aimPoint = aimPos_Shoot;
+        	if(spoolTime.get()>=prefs.getDouble("Delay_ShootWarmup", 0.5)){
+        		// commanded to shoot, time to actually shoot
         		shootSol.set(true);
+        		spoolTime.reset();
+        		spoolStage=3;
         	}
         }
-        if(!joystickR.getRawButton(2)&&!joystickR.getRawButton(1)){
-			//flailSol.set(Value.kReverse);
+        if(spoolStage==3&&spoolTime.get()>=prefs.getDouble("Delay_Shoot", 0.75)){
+        	// shooting has finished
+        	shootSol.set(false);
+        	spoolStage=0;
+        	aimPoint = aimPos_Drive;
+        }
+        if(!joystickR.getRawButton(2)&&!joystickR.getRawButton(1)&&spoolStage!=3){
+        	// commanded to just drive around
+			flailSol.set(Value.kReverse);
         	flailBag.set(0);
         	shootCim.set(0);
         	shootSol.set(false);
         	spoolStage=0;
+        	aimPoint = aimPos_Drive;
         }
-        if(box.getRawButton(7)){
+        
+       /* if(box.getRawButton(7)){
         	flailSol.set(Value.kForward);
         }
         if(!box.getRawButton(7)){
         	flailSol.set(Value.kReverse);
         }
-        
+       */ 
         double down = prefs.getDouble("AimPos_Down", -1.345);
         double start = prefs.getDouble("AimPos_Start", -1.098);
         
@@ -185,8 +210,8 @@ public class Robot extends IterativeRobot {
         
         
         //shootCim.set(0);
-        aimCim.set(shoot2 * 0.7);
-        //aimCim.set(point);
+        //aimCim.set(shoot2 * 0.7);
+        aimCim.set(aimPoint);
         dashboard.putNumber("shoot speed", shoot);
         dashboard.putNumber("aim P", aimCim.getP());
         dashboard.putNumber("aim I", aimCim.getI());
